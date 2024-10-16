@@ -6,4 +6,4 @@ This directory contains the scripts we used to run experiments. The two csv file
 ./bitwuzla.sh
 ```
 
-after bitwuzla has been built successfully. Other solvers are the same.
+after bitwuzla has been installed successfully. Other solvers are the same.

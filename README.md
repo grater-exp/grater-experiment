@@ -39,8 +39,6 @@ The second command is to run grater to solve these constraints. The solving resu
 
 Additionally, you can specify the output directory of benchmark to run using `--benchmark` option (or `-b`). For example, `--benchmark our`, the parsing results and solving results will be in `solvers/grater/our`. Note that the output directory of `parse.py` and `solve-with-check.py` need to be same.
 
-**NOTE:** If the variable name in constraints is illegal in Python, you may need to change it (in SMT2 file itself or in `objective_functions.py`), otherwise there will be problems when Grater solving it.
-
 
 
 ## Baselines
