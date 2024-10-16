@@ -28,6 +28,7 @@ def generate_x0(func, low, high):
     func_str = inspect.getsource(func)
     
     matches = re.findall(r'(?:\(\s*)+[a-z]+\d*(?:\s*\))+\s+[-]\s+(?:\(\s*)+[-]?\d+[/]?\d*(?:\s*\))+\s+\*\*\s+2', func_str)
+
     var_dict = {}
 
     for match in matches:
@@ -52,7 +53,7 @@ timeout = 48*60*60
 @func_set_timeout(timeout)
 def solve_one_in_benchmark(variable_num, filepath, var_list, gradf=None, negation_idx=None):
     if filepath[0][0].isdigit():
-        if filepath[1][0].isdigit():
+        if len(filepath) <= 1 or filepath[1][0].isdigit():
             fun = 'test_' + '_'.join(filepath[0:]).replace('-', '_').replace('.', '_')
         else:
             fun = '_'.join(filepath[1:]).replace('-', '_').replace('.', '_')
@@ -85,13 +86,18 @@ def solve_one_in_benchmark(variable_num, filepath, var_list, gradf=None, negatio
     if func_name == '':
         print(f'\033[31m function name error\033[0m')
         exit(-2) # TODO
+    func_str = inspect.getsource(eval(func_name))
+    matches = re.findall(r'(?:\(\s*)+[a-z]+\d*(?:\s*\))+\s+[-]\s+(?:\(\s*)+[-]?\d+[/]?\d*(?:\s*\))+\s+\*\*\s+2', func_str)
+    has_solution = False
+    if len(matches) == variable_num:
+        has_solution = True
     start = time.time()
     solved = False
     x_ret = np.array([0] * variable_num)
     i = 0
     while True:
         i += 1
-        if "wintersteiger" in func_name:
+        if has_solution:
             ix0 = generate_x0(eval(func_name), -100, 100)
         elif i > 1 and np.all(abs(gradf(x_ret)) < 1.0): # add perturbation
             ix0 = x_ret + randfloat(variable_num, -10, 10)
@@ -146,6 +152,8 @@ def solve_one_in_benchmark(variable_num, filepath, var_list, gradf=None, negatio
             read_smt_dir = 'checksat/QF_FP-JFS/'
             write_smt_dir = 'checksat/write_QF_FP-JFS/'
             read_smt_file = read_smt_dir + '/'.join(filepath) + '.smt2'
+            if not os.path.exists(read_smt_file):
+                continue
             with open(read_smt_file, 'r') as fr_smt:
                 print(f'read smt file: {read_smt_file}')
                 fr_data = fr_smt.readlines()
@@ -272,15 +280,17 @@ def solve_according_to_csv_file_comparing_4_tools_with_timeout(read_file, write_
             # one_to_write = list(map(str, line[:]))
             one_to_write = []
             one_to_write.extend(line[:])
+            line_1_split = '.'.join(line[1].split('.')[:-1]).split('/')
             if 'QF_FP' in line[1]:
-                idx = '.'.join(line[1].split('.')[:-1]).split('/').index('QF_FP')
+                idx = line_1_split.index('QF_FP')
             elif 'FP' in line[1]:
-                idx = '.'.join(line[1].split('.')[:-1]).split('/').index('FP')
-            #idx = '.'.join(line[1].split('.')[:-1]).split('/').index('QF_FP') # QF_FP, FP
-            filepath = '.'.join(line[1].split('.')[:-1]).split('/')[idx + 1:]
+                idx = line_1_split.index('FP')
+            else:
+                idx = len(line_1_split) - 2
+            filepath = line_1_split[idx + 1:]
             # print(filepath)
             if filepath[0][0].isdigit():
-                if filepath[1][0].isdigit():
+                if len(filepath) <= 1 or filepath[1][0].isdigit():
                     fun = 'test_' + '_'.join(filepath[0:]).replace('-', '_').replace('.', '_')
                 else:
                     fun = '_'.join(filepath[1:]).replace('-', '_').replace('.', '_')
@@ -385,7 +395,7 @@ def solve_according_to_csv_file_comparing_4_tools_with_timeout(read_file, write_
                 continue
             # variable_num = int(line[2])
             if filepath[0][0].isdigit():
-                if '_'.join(filepath[1:]).replace('-', '_').replace('.', '_') in var_list.keys():
+                if len(filepath) > 1 and '_'.join(filepath[1:]).replace('-', '_').replace('.', '_') in var_list.keys():
                     one_var_list = var_list['_'.join(filepath[1:]).replace('-', '_').replace('.', '_')]
                     assert int(line[2]) == len(one_var_list.split())
                 else:

@@ -22,11 +22,11 @@ MINIMUM = sys.float_info.min
 
 need_further_process_type = ['to_fp', 'fp', 'fp.div', 'fp.mul', 'fp.add', 'fp.sub', 'fp.fma', 'fp.rem', 'fp.abs',
                              'fp.max', 'fp.min', 'fp.neg']
-cannot_handle = ['fp.roundToIntegral', 'fp.sqrt', 'NaN', '+oo', '-oo', 'fp.isInfinite', 'distinct', 'fp.isNaN', '=>', 'fp.isZero', 'if'] # => Implies
+cannot_handle = ['fp.roundToIntegral', 'fp.sqrt', 'NaN', '+oo', '-oo', 'fp.isInfinite', 'distinct', 'fp.isNaN', '=>', 'fp.isZero', 'fpIsNormal', 'fpIsSubnormal', 'if', 'ite'] # => Implies
 pattern_for_variable = '\w+'
 pattern_for_num = '\d+'
 pattern_for_fpFP = 'fpFP\\(\\d+, \\d+, \\d+\\)'
-characters = ['(', ')', ',', '**', '+', '-', '*', '/', '>', '<', '>=', '<=', '=', 'and']
+characters = ['(', ')', ',', '**', '+', '-', '*', '/', '>', '<', '>=', '<=', '=', 'and', '#or#'] # '#or#' is a special label
 
 
 def process_fpref_node(node):
@@ -158,14 +158,26 @@ def parse_one_node(item, functions, not_node=False):
         decl_name = item.decl().name()
         if decl_name == 'and':
             for child_idx in range(len(item.children())):
-                functions = parse_one_node(item.children()[child_idx], functions, not_node) # no not_node before
+                functions = parse_one_node(item.children()[child_idx], functions)
                 if len(functions) == 0:
                     print(
                         f'\033[35m Skip! Don\'t generate objective functions due to unsupported operation.\033[0m')
                     return []
         elif decl_name == 'or':
             # circumstance like Or(fpIsNormal(a), fpIsZero(a), fpIsSubnormal(a)), skip
-            return []
+            or_start_idx = len(functions)
+            for child_idx in range(len(item.children())):
+                functions = parse_one_node(item.children()[child_idx], functions)
+                if len(functions) == 0:
+                    print(
+                        f'\033[35m Skip! Don\'t generate objective functions due to unsupported operation.\033[0m')
+                    return []
+            for i in range(or_start_idx + 1, len(functions)):
+                # add special words to label "or"
+                if isinstance(functions[i], str):
+                    functions[i] = "#or#" + functions[i]
+                elif isinstance(functions[i], list):
+                    functions[i][0] = "#or#" + functions[i][0]
         elif decl_name == 'not':
 
             if len(item.children()) == 1:
@@ -715,7 +727,11 @@ def split_represent_final_objective_function(filename, functions, source_filenam
     for one in functions:
         if isinstance(one, str):
             if one != '':
-                append += ' + ' + one
+                if one.startswith("#or#"):
+                    one = one[4:]
+                    append += ' * ' + one
+                else:
+                    append += ' + ' + one
                 for part in one.split():
                     # check the identifier according to the requirements of PL
                     '''
@@ -772,7 +788,11 @@ def split_represent_final_objective_function(filename, functions, source_filenam
         code_snippet += '''\n    libm.fesetround(FE_TONEAREST)'''
     return_append = ''
     for index in range(len(split)):
-        return_append += ''' segment''' + str(index)
+        if split[index][0].startswith("#or#"):
+            split[index][0] = split[index][0][4:]
+            return_append += ''' #or#segment''' + str(index)
+        else:
+            return_append += ''' segment''' + str(index)
         code_snippet += '''\n    segment''' + str(index) + ''' = None'''
         length = len(split[index])
         assert length % 2 != 0
@@ -791,18 +811,38 @@ def split_represent_final_objective_function(filename, functions, source_filenam
 
     code_snippet += '''\n    return '''
     if len(append) == 0:
-        code_snippet += ' + '.join(return_append.split())
+        return_append_split = return_append.split()
+        code_snippet_t = ""
+        for i in range(len(return_append_split)):
+            if return_append_split[i].startswith("#or#"):
+                code_snippet_t += ' * ' + return_append_split[i][4:]
+            else:
+                code_snippet_t += ' + ' + return_append_split[i]
+        code_snippet += code_snippet_t[3:] #' + '.join(return_append.split())
     else:
         code_snippet += append
         if len(return_append.split()) > 0:
-            code_snippet += ''' + ''' + '+'.join(return_append.split())
+            return_append_split = return_append.split()
+            code_snippet_t = ""
+            for i in range(len(return_append_split)):
+                if return_append_split[i].startswith("#or#"):
+                    code_snippet_t += ' * ' + return_append_split[i][4:]
+                else:
+                    code_snippet_t += ' + ' + return_append_split[i]
+            code_snippet += code_snippet_t
+            #code_snippet += ''' + ''' + '+'.join(return_append.split())
 
     # print(f'generated code snippet:\n{code_snippet}') CQ
+    # check variable name
+    replace_idx = 0
+    for v in variables:
+        if not v.isidentifier():
+            code_snippet = code_snippet.replace(v, "rplc_x" + str(replace_idx))
+            replace_idx += 1
     # write into file
     with open(filename, 'a') as fw:
         fw.write(code_snippet + '\n\n')
     return True
-
 
 def construct_objective_function(functions):
     # organize all piecewise function
@@ -1086,11 +1126,11 @@ def run_single_file(filename):
     print(f'time used:{time_used}')
 
 
-def compare_with_other_tools(filename):
+def compare_with_other_tools(filename, benchark_name):
     parse_error_num = 0
     unsupported_operation_num = 0
-    benchmark = filename.split('/')[-1].split('.')[0].split('-')[0]
-    object_dir = '/home/chenqian/Documents/gradient_solve/QF_FP-master/'
+    benchmark = benchark_name#filename.split('/')[-1].split('.')[0].split('-')[0]
+    #object_dir = '/home/chenqian/Documents/gradient_solve/QF_FP-master/'
     #write_dir = '/home/chenqian/Documents/gradient_solve/parse-constraint/' + benchmark + '/'
     write_dir = './' + benchmark + '/'
     # filename = '/home/chenqian/Documents/poly/benchmarks+output/output/gosat/result.csv'
@@ -1099,7 +1139,8 @@ def compare_with_other_tools(filename):
     else:
         os.popen('rm ' + write_dir + '/*')
     time.sleep(1)
-    write_filename = write_dir + 'objective_functions_' + benchmark + '.py'
+    #write_filename = write_dir + 'objective_functions_' + benchmark + '.py'
+    write_filename = 'objective_functions.py'
 
     with open(write_filename, "w") as wf:
         wf.write('''import ctypes
@@ -1126,16 +1167,19 @@ libm = ctypes.CDLL('libm.so.6')\n\n''')
             # print(line[1])
             # print(line[1].split('.')[:-1])
             # print('.'.join(line[1].split('.')[:-1]))
+            line_1_split = '.'.join(line[1].split('.')[:-1]).split('/')
             if 'QF_FP' in line[1]:
-                idx = '.'.join(line[1].split('.')[:-1]).split('/').index('QF_FP')
+                idx = line_1_split.index('QF_FP')
             elif 'FP' in line[1]:
-                idx = '.'.join(line[1].split('.')[:-1]).split('/').index('FP')
-            filepath = '.'.join(line[1].split('.')[:-1]).split('/')[idx + 1:]
+                idx = line_1_split.index('FP')
+            else:
+                idx = len(line_1_split) - 2
+            filepath = line_1_split[idx + 1:]
             # print(filepath)
             # if '/'.join(filepath).startswith('wintersteiger/toIntegral/') or '/'.join(filepath).startswith('wintersteiger/sqrt/'):
             #    continue
             if filepath[0][0].isdigit():
-                if filepath[1][0].isdigit():
+                if len(filepath) <= 1 or filepath[1][0].isdigit():
                     source_filename = 'test_' + '_'.join(filepath[0:]).replace('-', '_').replace('.', '_')
                 else:
                     source_filename = '_'.join(filepath[1:]).replace('-', '_').replace('.', '_')
@@ -1179,10 +1223,10 @@ libm = ctypes.CDLL('libm.so.6')\n\n''')
             time_record.append(one_line_record)
             print(f'time used:{time_used}')
     # print(f'time_record[0]:{time_record[0]}')
-    os.popen('cp ' + write_filename + ' ./objective_functions.py')
+    #os.popen('cp ' + write_filename + ' ./objective_functions.py')
     write_data = np.array(time_record).tolist()
     df = pd.DataFrame(write_data)
-    df.to_csv(write_dir + 'mpcs_result_for_constructing_objective_functions.csv', index=False, header=False)
+    df.to_csv(write_dir + 'construct.csv', index=False, header=False)
     # with open(write_dir + 'mpcs_result_for_constructing_objective_functions.csv', 'w') as fw:
     #     for one in time_record:
     #         fw.write(','.join(one) + '\n')
@@ -1238,8 +1282,25 @@ def reconstruct_objective_function(read_file, write_file, benchmark):
             fw.write(','.join(one_line_record) + '\n')
     # os.popen('cp ' + write_filename + ' ./objective_functions.py')
 
-def constrcut_csv(benchmark_path):
-    return None # constrcut.csv
+def constrcut_csv(benchmark_folder_path, constrcut_csv_path):
+    construct_list = []
+    for root, _, files in os.walk(benchmark_folder_path):
+        for file in files:
+            if file.endswith('.smt2'):
+                smt2_file_path = os.path.join(root, file)
+                var_num = 0
+                with open(smt2_file_path, 'r') as sf:
+                    line = sf.readline()
+                    while line:
+                        if "declare-fun" in line:
+                            var_num += 1
+                        line = sf.readline()
+                construct_list.append((smt2_file_path, smt2_file_path, var_num))
+    with open(constrcut_csv_path, 'w', newline='') as cf:
+        writer = csv.writer(cf)
+        for construct in construct_list:
+            writer.writerow(construct)
+                
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
@@ -1247,7 +1308,7 @@ if __name__ == '__main__':
     parser.add_argument("--path","-p", help = "need to specify the folder path of benchmark")
     args = parser.parse_args()
     benchmark = args.benchmark
-    benchmark_path = args.path
+    benchmark_folder_path = args.path
     # CQ supported constraint file:
     # griggio/fmcad12/square.smt2, e1_1.c.smt2, pow5.smt2, div.c.3.smt2, f23.smt2, test_v5_r5_vr10_c1_s5996, wintersteiger/add/add-has-no-other-solution-15685.smt2, wintersteiger/sub/sub-has-solution-11649.smt2
 
@@ -1259,8 +1320,10 @@ if __name__ == '__main__':
     # run_dataset()
     # benchmark = '500'
     #compare_with_other_tools('/home/chenqian/Documents/gradient_solve/experiment_results/' + benchmark + '-benchmark-result.csv')
-    constrcut_csv_path = constrcut_csv(benchmark_path)
-    compare_with_other_tools(constrcut_csv_path)
+    constrcut_csv_path = 'to_construct.csv'
+    constrcut_csv(benchmark_folder_path, constrcut_csv_path)
+    compare_with_other_tools(constrcut_csv_path, benchmark)
+    os.popen('rm ' + constrcut_csv_path)
     #parse_one_smtfile("a.smt2")
 
     '''
