@@ -4,7 +4,7 @@ This directory contains the source code of Grater and adapted CoverMe.
 
 ## Running Grater
 
-The source code of Grater is in `grater`. The way to run it has been introduced [here](https://github.com/grater-exp/grater-experiment/blob/main/README.md#running-grater).
+The source code of Grater is in `grater`. The way to run it has been introduced [here](https://github.com/grater-exp/grater-experiment?tab=readme-ov-file#running-grater).
 
 ## Running CoverMe
 
@@ -12,7 +12,7 @@ CoverMe is not originally designed for floating-point constraints solving, so we
 
 ## Building other solvers
 
-We build other baseline solvers using their release version as introduced [here](https://github.com/grater-exp/grater-experiment/blob/main/README.md#baselines). The methods to build and run them are all in their homepages:
+We build other baseline solvers using their release version as introduced [here](https://github.com/grater-exp/grater-experiment?tab=readme-ov-file#baselines). The methods to build and run them are all in their homepages:
 
 [XSat](https://github.com/zhoulaifu/xsat)
 
