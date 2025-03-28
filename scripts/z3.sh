@@ -19,7 +19,7 @@ function run_solver(){
     IFS=',' read -r smt_file_path smt_original_file_path file_msg <<< "$line"
   
     start_time=$(date +%s.%N)
-    solving_results=$(timeout "$timeout_seconds" /root/z3/build/z3 "$smt_file_path" 2>&1) # file path of z3
+    solving_results=$(timeout "$timeout_seconds" z3 "$smt_file_path" 2>&1)
     return_code=$?
     end_time=$(date +%s.%N)
 
@@ -38,9 +38,9 @@ function run_solver(){
       misc=$(echo "$solving_results" | cut -d ';' -f 2)
       tmp_results=$(echo "$solving_results" | cut -d ';' -f 1)
       if [ $tmp_results == 'sat' ] || [ $tmp_results == 'unsat' ]; then
-        echo "$smt_file_path,$number_of_variable,$tmp_results,$solving_time,$misc" >> "$2"
+        echo "$smt_file_path,$smt_original_file_path,$file_msg,$tmp_results,$solving_time,$misc" >> "$2"
       else
-        echo "$smt_file_path,$number_of_variable,,$solving_time,$solving_results" >> "$2"
+        echo "$smt_file_path,$smt_original_file_path,$file_msg,,$solving_time,$solving_results" >> "$2"
       fi
     fi
   done < "$1"

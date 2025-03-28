@@ -22,9 +22,9 @@ pip install numpy scipy autograd pandas bitstring func-timeout z3-solver
 
 #### Running from the source code
 
-The `slovers/grater` directory contains the source code of Grater. We recommend running Grater on Linux to prevent bugs on other systems.
+Grater supports constraints in the `QF_FP` logics of the [SMT-LIB](https://smt-lib.org/) langauge. [slovers/grater](https://github.com/grater-exp/grater-experiment/tree/master/solvers/grater) contains the source code of Grater. We recommend running Grater on Linux to prevent bugs on other systems.
 
-Consider the benchmark constraints located at `benchmarks/our-benchmarks` (i.e., the "our benchmarks" used in Grater's paper) as an example. You can use commands like
+Consider the benchmark constraints located at [benchmarks/our-benchmarks](https://github.com/grater-exp/grater-experiment/tree/master/benchmarks/our-benchmarks) (i.e., the "our benchmarks" used in Grater's paper) as an example. You can use commands like
 
 ```
 python solvers/grater/parse.py --path ../../benchmarks/our-benchmarks
@@ -54,12 +54,21 @@ We compare Grater with following solvers:
 |       [CVC5](https://github.com/cvc5/cvc5)       | [v1.2.0](https://github.com/cvc5/cvc5/releases/tag/cvc5-1.2.0) |
 | [Bitwuzla](https://github.com/bitwuzla/bitwuzla) | [v0.5.0](https://github.com/bitwuzla/bitwuzla/releases/tag/0.5.0) |
 
-NOTE: CoverMe is not originally designed for floating-point constraints solving, so we adapt it to function as a floating-point constraint solver. The source code of adapted CoverMe is in `slovers/coverme`. The way to run it is the same as [XSat](https://github.com/zhoulaifu/xsat).
+NOTE: CoverMe is not originally designed for floating-point constraints solving, so we adapt it to function as a floating-point constraint solver. The source code of adapted CoverMe is in [slovers/coverme](https://github.com/grater-exp/grater-experiment/tree/master/solvers/coverme). The way to run it is the same as [XSat](https://github.com/zhoulaifu/xsat).
+
+We run baselines solvers using the scripts in [scripts](https://github.com/grater-exp/grater-experiment/tree/master/scripts). The [README](https://github.com/grater-exp/grater-experiment/tree/master/scripts#scripts) in it has more details.
 
 
 
 ## Benchmarks
 
-The directory `benchmarks` contains the benchmarks used in Grater's paper. `benchmarks/jfs-benchmarks` is [JFS's benchmark](https://github.com/mc-imperial/jfs-fse-2019-artifact/tree/master/data/benchmarks/3-stratified-random-sampling/benchmarks/QF_FP), and `benchmarks/our-benchmarks` is "our benchmarks" mentioned in Grater's paper. 
+[benchmarks](https://github.com/grater-exp/grater-experiment/tree/master/benchmarks) contains the benchmarks used in Grater's paper. [benchmarks/jfs-benchmarks](https://github.com/grater-exp/grater-experiment/tree/master/benchmarks/jfs-benchmarks) is the selected [JFS's benchmarks](https://github.com/mc-imperial/jfs-fse-2019-artifact/tree/master/data/benchmarks/3-stratified-random-sampling/benchmarks/QF_FP), and [benchmarks/our-benchmarks](https://github.com/grater-exp/grater-experiment/tree/master/benchmarks/our-benchmarks) is "our benchmarks" mentioned in Grater's paper. 
 
-The files of objective functions and parsing results of these two benchmarks have already generated in `solvers/grater/objective_functions_jfs.py` and `solvers/grater/jfs/construct.csv`,  `solvers/grater/objective_functions_our.py` and `solvers/grater/our/construct.csv`.
+
+
+## Results
+
+[results](https://github.com/grater-exp/grater-experiment/tree/master/results) contains the data of experiment results in Grater's paper. [results/jfs](https://github.com/grater-exp/grater-experiment/tree/master/results/jfs) is the results of all evaluated solvers on JFS’s benchmarks, and [results/our](https://github.com/grater-exp/grater-experiment/tree/master/results/our) is the results on our benchmarks.
+
+If you want to reproduce the results of our experiments, the README in [scripts]((https://github.com/grater-exp/grater-experiment/tree/master/scripts#scripts)) and [solvers](https://github.com/grater-exp/grater-experiment/tree/master/solvers#running-grater) will be helpful. We run each solver on machines equipped with 12th Gen Intel^®^ Core^™^ i7-12700H CPU and 32GB RAM, Ubuntu 22.04.2 LTS (64-bit).
+

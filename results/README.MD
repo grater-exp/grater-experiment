@@ -1,0 +1,3 @@
+# Results
+
+This directory contains the data of experiment results. [jfs](https://github.com/grater-exp/grater-experiment/tree/master/results/jfs) is the results of all evaluated solvers on JFS’s benchmarks, and [our](https://github.com/grater-exp/grater-experiment/tree/master/results/our) is the results on our benchmarks. These results contain the file path, file message, solving results (e.g., `sat`), solving time (seconds), other message (such as error message reported by solvers).
