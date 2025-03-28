@@ -70,5 +70,5 @@ We run baselines solvers using the scripts in [scripts](https://github.com/grate
 
 [results](https://github.com/grater-exp/grater-experiment/tree/master/results) contains the data of experiment results in Grater's paper. [results/jfs](https://github.com/grater-exp/grater-experiment/tree/master/results/jfs) is the results of all evaluated solvers on JFS’s benchmarks, and [results/our](https://github.com/grater-exp/grater-experiment/tree/master/results/our) is the results on our benchmarks.
 
-If you want to reproduce the results of our experiments, the README in [scripts]((https://github.com/grater-exp/grater-experiment/tree/master/scripts#scripts)) and [solvers](https://github.com/grater-exp/grater-experiment/tree/master/solvers#running-grater) will be helpful. We run each solver on machines equipped with 12th Gen Intel^®^ Core^™^ i7-12700H CPU and 32GB RAM, Ubuntu 22.04.2 LTS (64-bit).
+If you want to reproduce the results of our experiments, the README in [scripts](https://github.com/grater-exp/grater-experiment/tree/master/scripts#scripts) and [solvers](https://github.com/grater-exp/grater-experiment/tree/master/solvers#running-grater) will be helpful. We run each solver on machines equipped with 12th Gen Intel^®^ Core^™^ i7-12700H CPU and 32GB RAM, Ubuntu 22.04.2 LTS (64-bit).
 
