@@ -27,8 +27,9 @@ Grater supports constraints in the `QF_FP` logics of the [SMT-LIB](https://smt-l
 Consider the benchmark constraints located at [benchmarks/our-benchmarks](https://github.com/grater-exp/grater-experiment/tree/master/benchmarks/our-benchmarks) (i.e., the "our benchmarks" used in Grater's paper) as an example. You can use commands like
 
 ```
-python solvers/grater/parse.py --path ../../benchmarks/our-benchmarks
-python solvers/grater/solve-with-check.py
+cd solvers/grater
+python parse.py --path ../../benchmarks/our-benchmarks
+python solve-with-check.py
 ```
 
 after cloning this repository. 

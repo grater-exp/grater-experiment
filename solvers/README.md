@@ -7,15 +7,17 @@ This directory contains the source code of Grater and adapted CoverMe.
 The source code of Grater is in [grater](https://github.com/grater-exp/grater-experiment/tree/master/solvers/grater). The way to run it has been introduced [here](https://github.com/grater-exp/grater-experiment?tab=readme-ov-file#running-grater). If you want to reproduce the [results](https://github.com/grater-exp/grater-experiment/tree/master/results) of Grater in our experiments, you can use command: 
 
 ```
-python solvers/grater/parse.py -p ../../benchmarks/jfs-benchmarks -b jfs
-python solvers/grater/solve-with-check.py -b jfs
+cd grater
+python parse.py -p ../../benchmarks/jfs-benchmarks -b jfs
+python solve-with-check.py -b jfs
 ```
 
 and
 
 ```
-python solvers/grater/parse.py -p ../../benchmarks/our-benchmarks -b our
-python solvers/grater/solve-with-check.py -b our
+cd grater
+python parse.py -p ../../benchmarks/our-benchmarks -b our
+python solve-with-check.py -b our
 ```
 
 to obtain the results of Grater on JFS's benchmarks and our benchmarks.
